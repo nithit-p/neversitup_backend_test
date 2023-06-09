@@ -1,0 +1,105 @@
+version: '3'
+services:
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql-scripts:/docker-entrypoint-initdb.d
+
+  auth:
+    build:
+      context: ./services/authentication
+      dockerfile: Dockerfile
+    ports:
+      - 8081:8081
+    depends_on:
+      - postgres
+    environment:
+      USER_MANAGEMENT_SERVICE_ADDRESS: ${USER_MANAGEMENT_SERVICE_ADDRESS}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+
+      AUTH_TABLE_NAME: ${AUTH_TABLE_NAME}
+      
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_TIME: ${JWT_EXPIRATION_TIME}
+      PORT: 8081
+
+  user_management:
+    build:
+      context: ./services/user_management
+      dockerfile: Dockerfile
+    ports:
+      - 8082:8082
+    depends_on:
+      - postgres
+    environment:
+      ORDER_MANAGEMENT_SERVICE_ADDRESS: ${ORDER_MANAGEMENT_SERVICE_ADDRESS}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+
+      USER_TABLE_NAME: ${USER_TABLE_NAME}
+      
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_TIME: ${JWT_EXPIRATION_TIME}
+      PORT: 8082
+
+  product_management:
+    build:
+      context: ./services/product_management
+      dockerfile: Dockerfile
+    ports:
+      - 8083:8083
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+
+      PRODUCT_TABLE_NAME: ${PRODUCT_TABLE_NAME}
+      
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_TIME: ${JWT_EXPIRATION_TIME}
+      PORT: 8083
+
+  order_management:
+    build:
+      context: ./services/order_management
+      dockerfile: Dockerfile
+    ports:
+      - 8084:8084
+    depends_on:
+      - postgres
+    environment:
+      PRODUCT_MANAGEMENT_SERVICE_ADDRESS: ${PRODUCT_MANAGEMENT_SERVICE_ADDRESS}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+
+      ORDER_TABLE_NAME: ${ORDER_TABLE_NAME}
+      ORDER_ITEM_TABLE_NAME: ${ORDER_ITEM_TABLE_NAME}
+      
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_TIME: ${JWT_EXPIRATION_TIME}
+      PORT: 8084
+
+
+volumes:
+  postgres_data:
